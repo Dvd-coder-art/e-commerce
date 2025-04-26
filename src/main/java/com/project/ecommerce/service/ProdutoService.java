@@ -1,0 +1,35 @@
+package com.project.ecommerce.service;
+
+import com.project.ecommerce.entity.ProdutoEntity;
+import com.project.ecommerce.repository.ProdutoRepository;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
+
+@Service
+public class ProdutoService {
+    private final ProdutoRepository produtoRepository;
+
+    public ProdutoService(ProdutoRepository produtoRepository){
+        this.produtoRepository= produtoRepository;
+    }
+
+    public List<ProdutoEntity> listarTodosProdutos(){
+        return  produtoRepository.findAll();
+    }
+
+    public Optional<ProdutoEntity> buscarPorIdProduto(Long id){
+        return produtoRepository.findById(id);
+    }
+
+    public ProdutoEntity salvarProduto(ProdutoEntity produto){
+        return produtoRepository.save(produto);
+    }
+
+    public void deletarProduto(Long id){
+        produtoRepository.deleteById(id);
+    }
+
+
+}

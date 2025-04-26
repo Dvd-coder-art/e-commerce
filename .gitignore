@@ -1,0 +1,35 @@
+# Pastas de build
+/target/
+/build/
+
+# IDEs
+.idea/
+*.iws
+*.iml
+*.ipr
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+.vscode/
+nbproject/private/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+# Arquivos Spring sensíveis
+application.properties
+application.yml
+application-dev.yml
+application-prd.yml
+application-mysql.yml
+
+# Arquivos de ambiente
+.env
+
+# Arquivo de ajuda do Spring
+HELP.md
