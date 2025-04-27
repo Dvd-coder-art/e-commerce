@@ -11,7 +11,7 @@ public class CategoriaMapper {
 
     public static Categoria toEntity(CategoriaResponseDTO dto){
         Categoria categoria = new Categoria();
-        categoria.setNome(dto.getNome());  // Não precisa de setId caso esteja criando uma nova categoria
+        categoria.setNome(dto.getNome());
         return categoria;
     }
 }

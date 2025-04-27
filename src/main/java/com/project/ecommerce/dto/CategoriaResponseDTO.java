@@ -10,6 +10,8 @@ public class CategoriaResponseDTO {
     private Long id;
     private String nome;
 
+
+
     public CategoriaResponseDTO(Long id, String nome) {
         this.id = id;
         this.nome = nome;
