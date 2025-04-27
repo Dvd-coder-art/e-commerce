@@ -19,8 +19,7 @@ public class Categoria {
 
     private String nome;
 
-    @Version
-    private Long versao;
+
 
     @OneToMany(mappedBy = "categoria")
     private List<ProdutoEntity> produtos;
