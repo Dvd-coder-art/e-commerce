@@ -87,10 +87,10 @@ public class CategoriaController {
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<CategoriaResponseDTO>> atualizar(@PathVariable Long id, @RequestBody CategoriaResponseDTO dto){
-        System.out.println("id: " + id);
-        Optional<Categoria> existente = categoriaService.listarPorId(id);
 
-        if (existente.isEmpty()){
+        Optional<Categoria> existenteOpt = categoriaService.listarPorId(id);
+
+        if (existenteOpt.isEmpty()){
             ApiResponse<CategoriaResponseDTO> response = new ApiResponse<>(
                     false,
                     "Categoria não encontrada",
@@ -98,10 +98,14 @@ public class CategoriaController {
             );
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
-        Categoria atualizado = CategoriaMapper.toEntity(dto);
-        Categoria salvo = categoriaService.salvarCategoria(atualizado);
-        atualizado.setId(id);
+
+        Categoria existente = existenteOpt.get();
+        existente.setNome(dto.getNome());
+
+
+        Categoria salvo = categoriaService.salvarCategoria(existente);
         CategoriaResponseDTO categoriaSave = CategoriaMapper.toDTO(salvo);
+
         ApiResponse<CategoriaResponseDTO> response = new ApiResponse<>(
                 true,
                 "Categoria atualizada com sucesso",
