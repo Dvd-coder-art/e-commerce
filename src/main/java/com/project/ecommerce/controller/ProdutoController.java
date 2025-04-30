@@ -1,6 +1,7 @@
 package com.project.ecommerce.controller;
 
 
+import com.project.ecommerce.dto.PaginaResponseDTO;
 import com.project.ecommerce.dto.ProdutoResponseDTO;
 import com.project.ecommerce.entity.Categoria;
 import com.project.ecommerce.entity.ProdutoEntity;
@@ -37,14 +38,23 @@ public class ProdutoController {
 
     @PreAuthorize("hasRole('USER')")
     @GetMapping
-    public ResponseEntity<ApiResponse<Page<ProdutoResponseDTO>>> listarTodos(Pageable pageable){
+    public ResponseEntity<ApiResponse<PaginaResponseDTO<ProdutoResponseDTO>>> listarTodos(Pageable pageable){
         Page<ProdutoEntity> pagina = produtoService.listarTodosProdutos(pageable);
         Page<ProdutoResponseDTO> paginaDTO = pagina.map(ProdutoMapper::toDTO);
 
-        ApiResponse<Page<ProdutoResponseDTO>> resposta = new ApiResponse<>(
+        PaginaResponseDTO<ProdutoResponseDTO> paginacao = new PaginaResponseDTO<>(
+                paginaDTO.getContent(),
+                paginaDTO.getNumber(),
+                paginaDTO.getTotalPages(),
+                paginaDTO.getTotalElements(),
+                paginaDTO.isLast(),
+                paginaDTO.isFirst()
+        );
+
+        ApiResponse<PaginaResponseDTO<ProdutoResponseDTO>> resposta = new ApiResponse<>(
                 true,
                 "Produtos listados com sucesso",
-                paginaDTO
+                paginacao
         );
         return ResponseEntity.ok(resposta);
     }
