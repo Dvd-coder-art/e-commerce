@@ -2,6 +2,8 @@ package com.project.ecommerce.service;
 
 import com.project.ecommerce.entity.ProdutoEntity;
 import com.project.ecommerce.repository.ProdutoRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,8 +17,8 @@ public class ProdutoService {
         this.produtoRepository= produtoRepository;
     }
 
-    public List<ProdutoEntity> listarTodosProdutos(){
-        return  produtoRepository.findAll();
+    public Page<ProdutoEntity> listarTodosProdutos(Pageable pageable){
+        return  produtoRepository.findAll(pageable);
     }
 
     public List<ProdutoEntity> salvarTodosProdutos(List<ProdutoEntity> produtos){

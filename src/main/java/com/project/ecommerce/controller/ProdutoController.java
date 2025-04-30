@@ -1,7 +1,6 @@
 package com.project.ecommerce.controller;
 
 
-import com.project.ecommerce.dto.ProdutoRequestDTO;
 import com.project.ecommerce.dto.ProdutoResponseDTO;
 import com.project.ecommerce.entity.Categoria;
 import com.project.ecommerce.entity.ProdutoEntity;
@@ -12,6 +11,8 @@ import com.project.ecommerce.response.ApiResponse;
 import com.project.ecommerce.service.CategoriaService;
 import com.project.ecommerce.service.ProdutoService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -36,16 +37,14 @@ public class ProdutoController {
 
     @PreAuthorize("hasRole('USER')")
     @GetMapping
-    public ResponseEntity<ApiResponse<List<ProdutoResponseDTO>>> listarTodos(){
-        List<ProdutoResponseDTO> produtos = produtoService.listarTodosProdutos()
-                .stream()
-                .map(ProdutoMapper::toDTO)
-                .collect(Collectors.toList());
+    public ResponseEntity<ApiResponse<Page<ProdutoResponseDTO>>> listarTodos(Pageable pageable){
+        Page<ProdutoEntity> pagina = produtoService.listarTodosProdutos(pageable);
+        Page<ProdutoResponseDTO> paginaDTO = pagina.map(ProdutoMapper::toDTO);
 
-        ApiResponse<List<ProdutoResponseDTO>> resposta = new ApiResponse<>(
+        ApiResponse<Page<ProdutoResponseDTO>> resposta = new ApiResponse<>(
                 true,
                 "Produtos listados com sucesso",
-                produtos
+                paginaDTO
         );
         return ResponseEntity.ok(resposta);
     }
