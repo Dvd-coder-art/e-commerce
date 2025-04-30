@@ -1,16 +1,19 @@
 package com.project.ecommerce.controller;
 
 
-import com.project.ecommerce.dto.ProdutoDTO;
+import com.project.ecommerce.dto.ProdutoRequestDTO;
+import com.project.ecommerce.dto.ProdutoResponseDTO;
 import com.project.ecommerce.entity.Categoria;
 import com.project.ecommerce.entity.ProdutoEntity;
+import com.project.ecommerce.exception.CategoriaException;
+import com.project.ecommerce.exception.ProdutoNaoEncontradoException;
 import com.project.ecommerce.mapper.ProdutoMapper;
 import com.project.ecommerce.response.ApiResponse;
 import com.project.ecommerce.service.CategoriaService;
 import com.project.ecommerce.service.ProdutoService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.access.prepost.PreAuthorize;
 
@@ -33,13 +36,13 @@ public class ProdutoController {
 
     @PreAuthorize("hasRole('USER')")
     @GetMapping
-    public ResponseEntity<ApiResponse<List<ProdutoDTO>>> listarTodos(){
-        List<ProdutoDTO> produtos = produtoService.listarTodosProdutos()
+    public ResponseEntity<ApiResponse<List<ProdutoResponseDTO>>> listarTodos(){
+        List<ProdutoResponseDTO> produtos = produtoService.listarTodosProdutos()
                 .stream()
                 .map(ProdutoMapper::toDTO)
                 .collect(Collectors.toList());
 
-        ApiResponse<List<ProdutoDTO>> resposta = new ApiResponse<>(
+        ApiResponse<List<ProdutoResponseDTO>> resposta = new ApiResponse<>(
                 true,
                 "Produtos listados com sucesso",
                 produtos
@@ -49,33 +52,26 @@ public class ProdutoController {
 
     @PreAuthorize("hasRole('USER')")
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<ProdutoDTO>> buscarPorId(@PathVariable Long id){
+    public ResponseEntity<ApiResponse<ProdutoResponseDTO>> buscarPorId(@PathVariable Long id){
         return produtoService.buscarPorIdProduto(id)
                 .map(produto -> {
-                    ProdutoDTO produtoDTO = ProdutoMapper.toDTO(produto);
-                    ApiResponse<ProdutoDTO> response = new ApiResponse<>(
+                    ProdutoResponseDTO produtoRequestDTO = ProdutoMapper.toDTO(produto);
+                    ApiResponse<ProdutoResponseDTO> response = new ApiResponse<>(
                             true,
                             "Produto localizado com sucesso",
-                            produtoDTO
+                            produtoRequestDTO
                     );
                     return ResponseEntity.ok(response);
                 })
-                .orElseGet(() -> {
-                    ApiResponse<ProdutoDTO> response = new ApiResponse<>(
-                            false,
-                            "Produto não encontrado",
-                            null
-                    );
-                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-                });
+                .orElseThrow(() -> new ProdutoNaoEncontradoException("Produto com ID " + id + " não encontrado!"));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
-    public ResponseEntity<ApiResponse<ProdutoDTO>> criar(@RequestBody ProdutoDTO dto){
+    public ResponseEntity<ApiResponse<ProdutoResponseDTO>> criar(@RequestBody ProdutoResponseDTO dto){
         Optional<Categoria> categoria = categoriaService.listarPorId(dto.getCategoriaId());
         if (categoria.isEmpty()){
-            ApiResponse<ProdutoDTO> response = new ApiResponse<>(
+            ApiResponse<ProdutoResponseDTO> response = new ApiResponse<>(
                     false,
                     "Categoria não encontrada",
                     null
@@ -86,8 +82,8 @@ public class ProdutoController {
 
         ProdutoEntity entity = ProdutoMapper.toEntity(dto, categoria.get());
         ProdutoEntity salvo = produtoService.salvarProduto(entity);
-        ProdutoDTO salvoDTO = ProdutoMapper.toDTO(salvo);
-        ApiResponse<ProdutoDTO> response = new ApiResponse<>(
+        ProdutoResponseDTO salvoDTO = ProdutoMapper.toDTO(salvo);
+        ApiResponse<ProdutoResponseDTO> response = new ApiResponse<>(
                 true,
                 "Produto criado com sucesso",
                 salvoDTO
@@ -97,12 +93,38 @@ public class ProdutoController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/lote")
+    public ResponseEntity<ApiResponse<List<ProdutoResponseDTO>>> criarEmLote(@RequestBody List<@Valid ProdutoResponseDTO> produtos){
+        List<ProdutoEntity> entidades = produtos.stream()
+                .map(produto -> {
+                    Optional<Categoria> categoria = categoriaService.listarPorId(produto.getCategoriaId());
+                    if (categoria.isEmpty()){
+                        throw new CategoriaException("Categoria com ID " + produto.getCategoriaId() + " não encontrada!");
+                    }
+                    return ProdutoMapper.toEntity(produto, categoria.get());
+                })
+                .collect(Collectors.toList());
+
+        List<ProdutoEntity> salvos = produtoService.salvarTodosProdutos(entidades);
+        List<ProdutoResponseDTO> salvoDTOs = salvos.stream()
+                .map(ProdutoMapper::toDTO)
+                .collect(Collectors.toList());
+
+        ApiResponse<List<ProdutoResponseDTO>> response = new ApiResponse<>(
+                true,
+                "Produtos cadastrados com sucesso",
+                salvoDTOs
+        );
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<ProdutoDTO>> atualizar(@PathVariable Long id, @RequestBody ProdutoDTO dto){
+    public ResponseEntity<ApiResponse<ProdutoResponseDTO>> atualizar(@PathVariable Long id, @RequestBody ProdutoResponseDTO dto){
         Optional<ProdutoEntity> existente = produtoService.buscarPorIdProduto(id);
         Optional<Categoria> categoria = categoriaService.listarPorId(dto.getCategoriaId());
         if (existente.isEmpty()){
-            ApiResponse<ProdutoDTO> response = new ApiResponse<>(
+            ApiResponse<ProdutoResponseDTO> response = new ApiResponse<>(
                     false,
                     "Produto não encontrado",
                     null
@@ -110,7 +132,7 @@ public class ProdutoController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
         if (categoria.isEmpty()) {
-            ApiResponse<ProdutoDTO> response = new ApiResponse<>(
+            ApiResponse<ProdutoResponseDTO> response = new ApiResponse<>(
                     false,
                     "Categoria não encontrada",
                     null
@@ -121,9 +143,9 @@ public class ProdutoController {
         ProdutoEntity atualizado = ProdutoMapper.toEntity(dto,categoria.get());
         atualizado.setId(id);
         ProdutoEntity salvo = produtoService.salvarProduto(atualizado);
-        ProdutoDTO salvoDTO = ProdutoMapper.toDTO(salvo);
+        ProdutoResponseDTO salvoDTO = ProdutoMapper.toDTO(salvo);
 
-        ApiResponse<ProdutoDTO> response = new ApiResponse<>(
+        ApiResponse<ProdutoResponseDTO> response = new ApiResponse<>(
                 true,
                 "Produto atualizado com sucesso",
                 salvoDTO

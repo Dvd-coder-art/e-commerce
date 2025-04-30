@@ -16,8 +16,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Optional;
-
 @RestController
 @RequestMapping("auth")
 public class AuthenticationController {
@@ -39,15 +37,15 @@ public class AuthenticationController {
 
         var  acessToken = tokenService.generateAccessToken(user);
         var refreshToken = tokenService.generateRefreshToken(user);
+
+
         ApiResponse<LoginResponseDTO> response = new ApiResponse<>(
                 true,
                 "Login feito com sucesso",
                 new LoginResponseDTO(acessToken,refreshToken)
         );
-
-
-
         return ResponseEntity.ok(response);
+
     }
 
     @PostMapping("/register")
@@ -56,7 +54,7 @@ public class AuthenticationController {
         if(repository.findByLogin(data.login())!=null) {
            ApiResponse<Void> response = new ApiResponse<>(
                    false,
-                   "Já existe um usuario com esse name",
+                   "Já existe um usuario com esse nome",
                    null
            );
            return ResponseEntity.badRequest().body(response);

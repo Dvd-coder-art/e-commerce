@@ -1,13 +1,14 @@
 package com.project.ecommerce.mapper;
 
-import com.project.ecommerce.dto.ProdutoDTO;
+import com.project.ecommerce.dto.ProdutoRequestDTO;
+import com.project.ecommerce.dto.ProdutoResponseDTO;
 import com.project.ecommerce.entity.Categoria;
 import com.project.ecommerce.entity.ProdutoEntity;
 
 public class ProdutoMapper {
 
-    public static ProdutoDTO toDTO(ProdutoEntity produto){
-        ProdutoDTO dto = new ProdutoDTO();
+    public static ProdutoResponseDTO toDTO(ProdutoEntity produto){
+        ProdutoResponseDTO dto = new ProdutoResponseDTO();
         dto.setId(produto.getId());
         dto.setNome(produto.getNome());
         dto.setPreco(produto.getPreco());
@@ -20,7 +21,7 @@ public class ProdutoMapper {
         return dto;
     }
 
-    public static ProdutoEntity toEntity(ProdutoDTO dto, Categoria categoria){
+    public static ProdutoEntity toEntity(ProdutoResponseDTO dto, Categoria categoria){
         ProdutoEntity produto = new ProdutoEntity();
         produto.setId(dto.getId());
         produto.setNome(dto.getNome());

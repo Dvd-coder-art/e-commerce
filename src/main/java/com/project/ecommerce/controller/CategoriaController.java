@@ -2,8 +2,8 @@ package com.project.ecommerce.controller;
 
 
 import com.project.ecommerce.dto.CategoriaResponseDTO;
-import com.project.ecommerce.dto.ProdutoDTO;
 import com.project.ecommerce.entity.Categoria;
+import com.project.ecommerce.exception.CategoriaException;
 import com.project.ecommerce.mapper.CategoriaMapper;
 import com.project.ecommerce.response.ApiResponse;
 import com.project.ecommerce.service.CategoriaService;
@@ -58,14 +58,7 @@ public class CategoriaController {
                             categoriaDTO
                     );
                     return ResponseEntity.ok(response);
-                }).orElseGet(() ->{
-                    ApiResponse<CategoriaResponseDTO> response = new ApiResponse<>(
-                            false,
-                            "Categoria não encontrada",
-                            null
-                    );
-                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-                });
+                }).orElseThrow(() -> new CategoriaException("Categoria com ID " + id + " não encontrada!"));
 
     }
 
@@ -88,18 +81,10 @@ public class CategoriaController {
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<CategoriaResponseDTO>> atualizar(@PathVariable Long id, @RequestBody CategoriaResponseDTO dto){
 
-        Optional<Categoria> existenteOpt = categoriaService.listarPorId(id);
+        Categoria existente = categoriaService.listarPorId(id)
+                .orElseThrow(() -> new CategoriaException("Categoria com ID " + id + " não encontrada."));
 
-        if (existenteOpt.isEmpty()){
-            ApiResponse<CategoriaResponseDTO> response = new ApiResponse<>(
-                    false,
-                    "Categoria não encontrada",
-                    null
-            );
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-        }
 
-        Categoria existente = existenteOpt.get();
         existente.setNome(dto.getNome());
 
 
@@ -123,7 +108,7 @@ public class CategoriaController {
         if (categoria.isEmpty()){
             ApiResponse<Void> response = new ApiResponse<>(
                     false,
-                    "Categoria não encontrada",
+                    "Categoria com " + id + " não encontrada!",
                     null
             );
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);

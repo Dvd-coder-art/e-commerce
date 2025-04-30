@@ -19,6 +19,10 @@ public class ProdutoService {
         return  produtoRepository.findAll();
     }
 
+    public List<ProdutoEntity> salvarTodosProdutos(List<ProdutoEntity> produtos){
+        return produtoRepository.saveAll(produtos);
+    }
+
     public Optional<ProdutoEntity> buscarPorIdProduto(Long id){
         return produtoRepository.findById(id);
     }
@@ -30,6 +34,8 @@ public class ProdutoService {
     public void deletarProduto(Long id){
         produtoRepository.deleteById(id);
     }
+
+
 
 
 }

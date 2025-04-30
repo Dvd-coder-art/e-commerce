@@ -12,23 +12,23 @@ public class CategoriaService {
 
     private final CategoriaRepository categoriaRepository;
 
-    public CategoriaService(CategoriaRepository categoriaRepository){
+    public CategoriaService(CategoriaRepository categoriaRepository) {
         this.categoriaRepository = categoriaRepository;
     }
 
-    public List<Categoria>listarCategoria(){
+    public List<Categoria> listarCategoria() {
         return categoriaRepository.findAll();
     }
 
-    public Optional<Categoria>listarPorId(Long id){
+    public Optional<Categoria> listarPorId(Long id) {
         return categoriaRepository.findById(id);
     }
 
-    public Categoria salvarCategoria(Categoria produto){
+    public Categoria salvarCategoria(Categoria produto) {
         return categoriaRepository.save(produto);
     }
 
-    public void deletarCategoria(Long id){
+    public void deletarCategoria(Long id) {
         categoriaRepository.deleteById(id);
     }
 }
