@@ -4,6 +4,7 @@ package com.project.ecommerce.controller;
 import com.project.ecommerce.dto.CategoriaResponseDTO;
 import com.project.ecommerce.entity.Categoria;
 import com.project.ecommerce.exception.CategoriaException;
+import com.project.ecommerce.exception.GlobalExceptionHandler;
 import com.project.ecommerce.mapper.CategoriaMapper;
 import com.project.ecommerce.response.ApiResponse;
 import com.project.ecommerce.service.CategoriaService;
@@ -62,11 +63,39 @@ public class CategoriaController {
 
     }
 
+    @PreAuthorize("hasRole('USER')")
+    @GetMapping("/nomes/{nome}")
+    public ResponseEntity<ApiResponse<CategoriaResponseDTO>> listarPorNome(@PathVariable String nome){
+        return categoriaService.listarPorNome(nome).map(
+                categoria -> {
+                    CategoriaResponseDTO categoriaDTO = CategoriaMapper.toDTO(categoria);
+                    ApiResponse<CategoriaResponseDTO> response = new ApiResponse<>(
+                            true,
+                            "Categoria encontrada",
+                            categoriaDTO
+                    );
+                    return ResponseEntity.ok(response);
+                }).orElseThrow(() -> new CategoriaException("Categoria com nome " + nome + " não encontrada!"));
+
+    }
+
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<ApiResponse<CategoriaResponseDTO>> criar(@RequestBody CategoriaResponseDTO dto){
         Categoria salvo = categoriaService.salvarCategoria(CategoriaMapper.toEntity(dto));
         CategoriaResponseDTO categoriaSave = CategoriaMapper.toDTO(salvo);
+        Optional<Categoria> nomeExistente = categoriaService.listarPorNome(dto.getNome());
+
+        if (nomeExistente.isPresent()){
+            ApiResponse<CategoriaResponseDTO> response = new ApiResponse<>(
+                    false,
+                    "Categoria com nome " + dto.getNome() + " já existe",
+                    null
+            );
+            return ResponseEntity.badRequest().body(response);
+        }
+
+
         ApiResponse<CategoriaResponseDTO> response = new ApiResponse<>(
                 true,
                 "Categoria salva com sucesso",
@@ -84,6 +113,15 @@ public class CategoriaController {
         Categoria existente = categoriaService.listarPorId(id)
                 .orElseThrow(() -> new CategoriaException("Categoria com ID " + id + " não encontrada."));
 
+        Optional<Categoria> nomeExistente = categoriaService.listarPorNome(dto.getNome());
+        if (nomeExistente.isPresent()){
+            ApiResponse<CategoriaResponseDTO> response = new ApiResponse<>(
+                    false,
+                    "Categoria com nome " + dto.getNome() + " já existe",
+                    null
+            );
+            return ResponseEntity.badRequest().body(response);
+        }
 
         existente.setNome(dto.getNome());
 

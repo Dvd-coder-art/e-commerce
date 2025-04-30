@@ -29,6 +29,10 @@ public class ProdutoService {
         return produtoRepository.findById(id);
     }
 
+    public Optional<ProdutoEntity> buscarPorNomeProduto(String nome) {
+        return produtoRepository.findByNome(nome);
+    }
+
     public ProdutoEntity salvarProduto(ProdutoEntity produto){
         return produtoRepository.save(produto);
     }

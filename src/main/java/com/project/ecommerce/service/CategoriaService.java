@@ -24,6 +24,10 @@ public class CategoriaService {
         return categoriaRepository.findById(id);
     }
 
+    public Optional<Categoria> listarPorNome(String nome) {
+        return categoriaRepository.findByNome(nome);
+    }
+
     public Categoria salvarCategoria(Categoria produto) {
         return categoriaRepository.save(produto);
     }

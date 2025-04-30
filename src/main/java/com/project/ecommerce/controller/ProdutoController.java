@@ -75,6 +75,22 @@ public class ProdutoController {
                 .orElseThrow(() -> new ProdutoNaoEncontradoException("Produto com ID " + id + " não encontrado!"));
     }
 
+    @PreAuthorize("hasRole('USER')")
+    @GetMapping("/nomes/{nome}")
+    public ResponseEntity<ApiResponse<ProdutoResponseDTO>> buscarPorNome(@PathVariable String nome){
+        return produtoService.buscarPorNomeProduto(nome)
+                .map(produto -> {
+                    ProdutoResponseDTO produtoRequestDTO = ProdutoMapper.toDTO(produto);
+                    ApiResponse<ProdutoResponseDTO> response = new ApiResponse<>(
+                            true,
+                            "Produto localizado com sucesso",
+                            produtoRequestDTO
+                    );
+                    return ResponseEntity.ok(response);
+                })
+                .orElseThrow(() -> new ProdutoNaoEncontradoException("Produto com nome " + nome + " não encontrado!"));
+    }
+
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<ApiResponse<ProdutoResponseDTO>> criar(@RequestBody ProdutoResponseDTO dto){
@@ -87,7 +103,15 @@ public class ProdutoController {
             );
             return ResponseEntity.badRequest().body(response);
         }
-
+        Optional<ProdutoEntity> existente = produtoService.buscarPorNomeProduto(dto.getNome());
+        if (existente.isPresent()){
+            ApiResponse<ProdutoResponseDTO> response = new ApiResponse<>(
+                    false,
+                    "Produto já cadastrado",
+                    null
+            );
+            return ResponseEntity.badRequest().body(response);
+        }
 
         ProdutoEntity entity = ProdutoMapper.toEntity(dto, categoria.get());
         ProdutoEntity salvo = produtoService.salvarProduto(entity);
@@ -104,6 +128,26 @@ public class ProdutoController {
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/lote")
     public ResponseEntity<ApiResponse<List<ProdutoResponseDTO>>> criarEmLote(@RequestBody List<@Valid ProdutoResponseDTO> produtos){
+        List<String> nomesProdutos = produtos.stream()
+                .map(ProdutoResponseDTO::getNome)
+                .collect(Collectors.toList());
+
+
+        Optional<ProdutoEntity> produtoExistente = nomesProdutos.stream()
+                .map(produtoService::buscarPorNomeProduto)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .findFirst();
+
+        if (produtoExistente.isPresent()){
+            ApiResponse<List<ProdutoResponseDTO>> response = new ApiResponse<>(
+                    false,
+                    "Produto com " + produtoExistente.get().getNome() + " já cadastrado",
+                    null
+            );
+            return ResponseEntity.badRequest().body(response);
+        }
+
         List<ProdutoEntity> entidades = produtos.stream()
                 .map(produto -> {
                     Optional<Categoria> categoria = categoriaService.listarPorId(produto.getCategoriaId());
@@ -132,6 +176,7 @@ public class ProdutoController {
     public ResponseEntity<ApiResponse<ProdutoResponseDTO>> atualizar(@PathVariable Long id, @RequestBody ProdutoResponseDTO dto){
         Optional<ProdutoEntity> existente = produtoService.buscarPorIdProduto(id);
         Optional<Categoria> categoria = categoriaService.listarPorId(dto.getCategoriaId());
+        Optional<ProdutoEntity> produtoExistente = produtoService.buscarPorNomeProduto(dto.getNome());
         if (existente.isEmpty()){
             ApiResponse<ProdutoResponseDTO> response = new ApiResponse<>(
                     false,
@@ -144,6 +189,14 @@ public class ProdutoController {
             ApiResponse<ProdutoResponseDTO> response = new ApiResponse<>(
                     false,
                     "Categoria não encontrada",
+                    null
+            );
+            return ResponseEntity.badRequest().body(response);
+        }
+        if (produtoExistente.isPresent()){
+            ApiResponse<ProdutoResponseDTO> response = new ApiResponse<>(
+                    false,
+                    "Produto já cadastrado",
                     null
             );
             return ResponseEntity.badRequest().body(response);
