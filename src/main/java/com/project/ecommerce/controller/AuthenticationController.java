@@ -52,12 +52,12 @@ public class AuthenticationController {
     public ResponseEntity<ApiResponse> register(@RequestBody @Valid RegisterDTO data){
 
         if(repository.findByLogin(data.login())!=null) {
-           ApiResponse<Void> response = new ApiResponse<>(
-                   false,
-                   "Já existe um usuario com esse nome",
-                   null
-           );
-           return ResponseEntity.badRequest().body(response);
+            ApiResponse<Void> response = new ApiResponse<>(
+                    false,
+                    "Já existe um usuario com esse nome",
+                    null
+            );
+            return ResponseEntity.badRequest().body(response);
         }
 
         String encryptedPassword = new BCryptPasswordEncoder().encode(data.password());
@@ -76,8 +76,9 @@ public class AuthenticationController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+
     @PostMapping("/refresh")
-    public ResponseEntity<LoginResponseDTO> refresh(@RequestBody @Valid RefreshRespondeDTO data){
+    public ResponseEntity<LoginResponseDTO> refresh(@RequestBody @Valid RefreshResponseDTO data){
         String refreshToken = data.refreshToken();
         String subject = tokenService.validateToken(data.refreshToken());
 
