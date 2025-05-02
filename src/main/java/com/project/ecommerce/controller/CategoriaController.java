@@ -82,11 +82,10 @@ public class CategoriaController {
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<ApiResponse<CategoriaResponseDTO>> criar(@RequestBody CategoriaResponseDTO dto){
-        Categoria salvo = categoriaService.salvarCategoria(CategoriaMapper.toEntity(dto));
-        CategoriaResponseDTO categoriaSave = CategoriaMapper.toDTO(salvo);
+
         Optional<Categoria> nomeExistente = categoriaService.listarPorNome(dto.getNome());
 
-        if (nomeExistente.isPresent()){
+        if(nomeExistente.isPresent()){
             ApiResponse<CategoriaResponseDTO> response = new ApiResponse<>(
                     false,
                     "Categoria com nome " + dto.getNome() + " já existe",
@@ -95,7 +94,8 @@ public class CategoriaController {
             return ResponseEntity.badRequest().body(response);
         }
 
-
+        Categoria salvo = categoriaService.salvarCategoria(CategoriaMapper.toEntity(dto));
+        CategoriaResponseDTO categoriaSave = CategoriaMapper.toDTO(salvo);
         ApiResponse<CategoriaResponseDTO> response = new ApiResponse<>(
                 true,
                 "Categoria salva com sucesso",
